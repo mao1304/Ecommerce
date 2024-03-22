@@ -1,4 +1,5 @@
 
+from django.shortcuts import get_object_or_404
 from rest_framework import permissions, viewsets
 
 
@@ -12,25 +13,21 @@ class readOnlyUserPermission(permissions.BasePermission):
             return request.method == 'GET'
     
 
-## view para retornar todas las categorias solo metodo "GET"
 class CategoryView(viewsets.ModelViewSet):
     serializer_class = CategorySerializer
     permission_classes = [readOnlyUserPermission]
+    queryset = Category.objects.all()
 
-
-    def get_queryset(self):   
-
+    def get_queryset(self):  
+        categories = None
         category_slug = self.kwargs.get('category_slug')
-        queryset = Category.objects.all() 
+        print(categories)
 
-        if category_slug == 'categories':
-            return queryset
+        if  category_slug == 'all':         
+            categories = Category.objects.all()
+                 
+        return categories
 
-        else:
-             queryset = queryset.filter(slug=category_slug)
-            
-        return queryset
-            
          
     
 

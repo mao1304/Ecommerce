@@ -11,14 +11,41 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-
+from rest_framework.authtoken.models import Token
 from .forms import RegistrationForm
 from .models import Account
+from .serializer import AccountSerializer
 # from .serializer import LoginSerializer
 
 @api_view(['POST'])
 def registrer(request):
-    return Response({registrer})
+    serializer = AccountSerializer(data=request.data)
+
+    if serializer.is_valid():
+        username = serializer.data['email'].split('@')[0]
+        serializer.save()
+
+        user = Account.objects.get(email=serializer.data['email'])
+        user.set_password(serializer.data['password'])
+        user.save()
+        token = Token.objects.create(user=user)
+
+        return Response({'token': token.key, 'user': serializer.data }, status=status.HTTP_201_CREATED)
+    else:
+        return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['POST'])
+def login(request):
+    return Response({'login':'login'})
+
+@api_view(['POST'])
+def logout(request):
+    return Response({'logout':'logout'})
+
+@api_view(['POST'])
+def profile(request):
+    return Response({'profile':'profile'})
+
 
 # class registrer(APIView):
 #     @method_decorator(csrf_exempt)
@@ -33,38 +60,38 @@ def registrer(request):
 #         else:
 #             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
-@method_decorator(csrf_exempt, name='dispatch')
-class Login(APIView):
-    print('entro al login view')
-    def post(self, request):
-        serializer = LoginSerializer(data=request.data)
-        print(f"entro aqui y este es el serializer{serializer}")
-        if serializer.is_valid():
-            try:
-                print('era valido el forms')
-                email = serializer.validated_data['email']
-                password = serializer.validated_data['password']
-                print(f'datos del form{email}{password}')
+# @method_decorator(csrf_exempt, name='dispatch')
+# class Login(APIView):
+#     print('entro al login view')
+#     def post(self, request):
+#         serializer = LoginSerializer(data=request.data)
+#         print(f"entro aqui y este es el serializer{serializer}")
+#         if serializer.is_valid():
+#             try:
+#                 print('era valido el forms')
+#                 email = serializer.validated_data['email']
+#                 password = serializer.validated_data['password']
+#                 print(f'datos del form{email}{password}')
 
-                user = authenticate(request, email=email,password=password)
-                print(user)
-                if user is None: 
-                    raise SuspiciousOperation("Credenciales incorrectas")
+#                 user = authenticate(request, email=email,password=password)
+#                 print(user)
+#                 if user is None: 
+#                     raise SuspiciousOperation("Credenciales incorrectas")
                 
-                login(request, user)
-                return Response({'message':'Inicio de sesión exitoso'},status=status.HTTP_200_OK)
+#                 login(request, user)
+#                 return Response({'message':'Inicio de sesión exitoso'},status=status.HTTP_200_OK)
             
-            except SuspiciousOperation as e:
-                return Response({'error':str(e)},status=status.HTTP_400_BAD_REQUEST)
-        else:
-            return Response({'error':serializer.errors},status=status.HTTP_400_BAD_REQUEST)
+#             except SuspiciousOperation as e:
+#                 return Response({'error':str(e)},status=status.HTTP_400_BAD_REQUEST)
+#         else:
+#             return Response({'error':serializer.errors},status=status.HTTP_400_BAD_REQUEST)
 
 
 
-@method_decorator(login_required, name='dispatch')
-@method_decorator(csrf_exempt, name='dispatch')
-class logout(APIView):
- def post(self, request):
-        request.session.flush()
-        logout(request)
-        return Response({'message': 'Cierre de sesión exitoso'}, status=status.HTTP_200_OK)
+# @method_decorator(login_required, name='dispatch')
+# @method_decorator(csrf_exempt, name='dispatch')
+# class logout(APIView):
+#  def post(self, request):
+#         request.session.flush()
+#         logout(request)
+#         return Response({'message': 'Cierre de sesión exitoso'}, status=status.HTTP_200_OK)

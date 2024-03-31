@@ -5,7 +5,7 @@ from .models import Account
 class AccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = Account
-        fields = ['first_name','last_name', 'email', 'password', 'username']
+        fields = ['first_name','last_name', 'email', 'password']
 
     # def create(self, validated_data):
     #     username = validated_data['email'].split('@')[0]

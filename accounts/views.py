@@ -4,25 +4,32 @@ from django.db import IntegrityError
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.contrib.auth import authenticate,logout,login 
-from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404
 
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.permissions import  IsAuthenticated
+from rest_framework.authentication import TokenAuthentication
 from rest_framework.authtoken.models import Token
 from .forms import RegistrationForm
 from .models import Account
 from .serializer import AccountSerializer
 # from .serializer import LoginSerializer
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication 
+
+class CsrfExemptSessionAuthentication(SessionAuthentication):
+
+    def enforce_csrf(self, request):
+        return  # To not perform the csrf check previously happening
 
 @api_view(['POST'])
 def registrer(request):
     serializer = AccountSerializer(data=request.data)
 
     if serializer.is_valid():
-        username = serializer.data['email'].split('@')[0]
         serializer.save()
 
         user = Account.objects.get(email=serializer.data['email'])
@@ -34,64 +41,38 @@ def registrer(request):
     else:
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
 
-@api_view(['POST'])
-def login(request):
-    return Response({'login':'login'})
 
 @api_view(['POST'])
-def logout(request):
-    return Response({'logout':'logout'})
-
-@api_view(['POST'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def profile(request):
-    return Response({'profile':'profile'})
+    serializer = AccountSerializer(instance=request.user)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+class Logout(APIView):
+    permission_classes = [IsAuthenticated]
+    def post(self, request):
+        request.session.flush()
+        logout(request)
+        return Response({'message': 'session successfully closed '}, status=status.HTTP_200_OK)
 
 
-# class registrer(APIView):
-#     @method_decorator(csrf_exempt)
-#     def dispatch(self, *args, **kwargs):
-#         return super().dispatch(*args, **kwargs)
 
-#     def post(self, request):
-#         serializer = RegistrationSerializer(data=request.data)
-#         if serializer.is_valid():
-#             serializer.save()
-#             return Response({'message': 'Registro exitoso'}, status=status.HTTP_201_CREATED)
-#         else:
-#             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@method_decorator(csrf_exempt, name='dispatch')
+class Login(APIView):
+    # authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
+    def post(self, request):
+        email = request.data.get('email')
+        password = request.data.get('password')
+        if not email or not password:
+            return Response({'error': 'email and password are required'}, status=status.HTTP_400_BAD_REQUEST)
         
-# @method_decorator(csrf_exempt, name='dispatch')
-# class Login(APIView):
-#     print('entro al login view')
-#     def post(self, request):
-#         serializer = LoginSerializer(data=request.data)
-#         print(f"entro aqui y este es el serializer{serializer}")
-#         if serializer.is_valid():
-#             try:
-#                 print('era valido el forms')
-#                 email = serializer.validated_data['email']
-#                 password = serializer.validated_data['password']
-#                 print(f'datos del form{email}{password}')
+        user = authenticate(request, email=email, password=password)
+        if user is None:
+            return Response({'error': 'Invalid email or password'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        login(request, user)  
+        token, created = Token.objects.get_or_create(user=user)
 
-#                 user = authenticate(request, email=email,password=password)
-#                 print(user)
-#                 if user is None: 
-#                     raise SuspiciousOperation("Credenciales incorrectas")
-                
-#                 login(request, user)
-#                 return Response({'message':'Inicio de sesión exitoso'},status=status.HTTP_200_OK)
-            
-#             except SuspiciousOperation as e:
-#                 return Response({'error':str(e)},status=status.HTTP_400_BAD_REQUEST)
-#         else:
-#             return Response({'error':serializer.errors},status=status.HTTP_400_BAD_REQUEST)
-
-
-
-# @method_decorator(login_required, name='dispatch')
-# @method_decorator(csrf_exempt, name='dispatch')
-# class logout(APIView):
-#  def post(self, request):
-#         request.session.flush()
-#         logout(request)
-#         return Response({'message': 'Cierre de sesión exitoso'}, status=status.HTTP_200_OK)
+        return Response({'token': token.key, 'createtoken': created, 'user': AccountSerializer(user).data}, status=status.HTTP_200_OK)

@@ -1,11 +1,6 @@
-from django.shortcuts import render
-from django.core.exceptions import SuspiciousOperation
-from django.db import IntegrityError
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.contrib.auth import authenticate,logout,login 
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import get_object_or_404
 
 from rest_framework import status
 from rest_framework.views import APIView
@@ -14,11 +9,10 @@ from rest_framework.decorators import api_view, authentication_classes, permissi
 from rest_framework.permissions import  IsAuthenticated
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.authtoken.models import Token
-from .forms import RegistrationForm
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication 
+
 from .models import Account
 from .serializer import AccountSerializer
-# from .serializer import LoginSerializer
-from rest_framework.authentication import SessionAuthentication, BasicAuthentication 
 
 class CsrfExemptSessionAuthentication(SessionAuthentication):
 

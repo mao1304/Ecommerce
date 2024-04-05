@@ -36,12 +36,12 @@ def registrer(request):
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(['POST'])
-@authentication_classes([TokenAuthentication])
-@permission_classes([IsAuthenticated])
-def profile(request):
-    serializer = AccountSerializer(instance=request.user)
-    return Response(serializer.data, status=status.HTTP_200_OK)
+# @authentication_classes([TokenAuthentication])
+class profile(APIView):
+    # permission_classes = [IsAuthenticated]
+    def get(self,request):
+        serializer = AccountSerializer(instance=request.user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 class Logout(APIView):
     permission_classes = [IsAuthenticated]

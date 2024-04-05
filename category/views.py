@@ -24,7 +24,6 @@ class CategoryView(viewsets.ModelViewSet):
     def get_queryset(self):  
         categories = None
         category_slug = self.kwargs.get('category_slug')
-        print(categories)
 
         if  category_slug == 'all':         
             categories = Category.objects.all()

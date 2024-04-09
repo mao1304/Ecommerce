@@ -79,12 +79,17 @@ class cart(APIView):
         cart_items = []
         print(cart_items)
         try:
-            print("3")
-            cart = Cart.objects.get(Cart_id=_cart_id(request))
-            cart_items = CartItem.objects.filter(Cart=cart, is_active=True)
+            if request.user.is_authenticated:
+                cart_items = CartItem.objects.filter(user=request.user, is_active=True)
+                print("3")
+            else:
+                cart = Cart.objects.get(Cart_id=_cart_id(request))
+                cart_items = CartItem.objects.filter(Cart=cart, is_active=True)
+
             for cart_item in cart_items:
                 total += (cart_item.Product.price * cart_item.quantity)
                 quantity += cart_item.quantity
+                
         except ObjectDoesNotExist:
             pass
 

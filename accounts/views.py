@@ -1,6 +1,7 @@
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.contrib.auth import authenticate,logout,login 
+from django.contrib.auth.decorators import login_required
 
 from rest_framework import status
 from rest_framework.views import APIView
@@ -13,16 +14,18 @@ from rest_framework.authentication import SessionAuthentication, BasicAuthentica
 
 from .models import Account
 from .serializer import AccountSerializer
+from Cart.views import _cart_id
+from Cart.models import Cart, CartItem
+
 
 class CsrfExemptSessionAuthentication(SessionAuthentication):
 
     def enforce_csrf(self, request):
-        return  # To not perform the csrf check previously happening
+        return  
 
 @api_view(['POST'])
 def registrer(request):
     serializer = AccountSerializer(data=request.data)
-
     if serializer.is_valid():
         serializer.save()
 
@@ -36,7 +39,7 @@ def registrer(request):
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
 
 
-# @authentication_classes([TokenAuthentication])
+@method_decorator(login_required, name='dispatch')
 class profile(APIView):
     # permission_classes = [IsAuthenticated]
     def get(self,request):
@@ -65,8 +68,19 @@ class Login(APIView):
         user = authenticate(request, email=email, password=password)
         if user is None:
             return Response({'error': 'Invalid email or password'}, status=status.HTTP_400_BAD_REQUEST)
-        
+        try:
+            cart = Cart.objects.get(Cart_id=_cart_id(request))
+            is_cart_item_exists = CartItem.objects.filter(Cart=cart).exists()
+            if is_cart_item_exists:
+                cart_item = CartItem.objects.filter(Cart=cart, is_active=True)
+                for item in cart_item:
+                    item.user = user
+                    item.save()
+        except:
+            pass
+
         login(request, user)  
         token, created = Token.objects.get_or_create(user=user)
 
         return Response({'token': token.key, 'createtoken': created, 'user': AccountSerializer(user).data}, status=status.HTTP_200_OK)
+

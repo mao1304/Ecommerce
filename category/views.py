@@ -12,9 +12,6 @@ class readOnlyUserPermission(permissions.BasePermission):
     def has_permission(self, request, view):
             return request.method == 'GET'
 
-class readOnlyUserPermission(permissions.BasePermission):
-    def has_permission(self, request, view):
-            return request.method == 'GET'
 
 class CategoryView(viewsets.ModelViewSet):
     serializer_class = CategorySerializer

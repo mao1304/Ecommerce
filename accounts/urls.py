@@ -5,7 +5,7 @@ from rest_framework import routers
 # router_products.register(r'registrer', views.registrer , 'registrer')
 
 urlpatterns = [
-    re_path('registrer/',views.registrer, name='registrer'),
+    re_path('register/',views.registrer, name='registrer'),
     path('login/',views.Login.as_view(), name='login'),
     path('logout/',views.Logout.as_view(), name='logout'),
     path('profile/',views.profile.as_view(), name='profile'),

@@ -24,7 +24,6 @@ class MyAccountManager(BaseUserManager):
             last_name=last_name,
             password=password,
         )
-        print("paso por aqui")
         user.is_admin = True
         user.is_active = True
         user.is_staff = True

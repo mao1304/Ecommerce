@@ -2,7 +2,7 @@ from django.db import models
 from django.urls import reverse
 
 
-from category.models import SubCategory
+from category.models import SubCategory, Category
 
 class Product(models.Model):
     Product_name = models.CharField(max_length=200, unique=True)
@@ -19,7 +19,7 @@ class Product(models.Model):
 
     
     def get_url(self):
-        return reverse('product_detail', args=[self.Category.slug, self.slug])
+        return reverse('product_detail', args=[self.SubCategory.slug, self.slug])
 
     def __str__(self):
         return self.Product_name

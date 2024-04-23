@@ -4,7 +4,7 @@ from .views import ProductView
 
 
 router_products = routers.DefaultRouter()
-router_products.register(r'', ProductView, 'product_detail')
+router_products.register(r'', ProductView, 'products')
 
 
 

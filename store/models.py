@@ -8,7 +8,7 @@ class Product(models.Model):
     Product_name = models.CharField(max_length=200, unique=True)
     slug = models.CharField(max_length=200, unique=True)
     description = models.CharField(max_length=500, blank=True)
-    price = models.IntegerField()
+    price = models.FloatField()
     brand = models.CharField(max_length=100)
     images = models.CharField( max_length=250)
     stock = models.IntegerField()

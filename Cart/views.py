@@ -23,9 +23,7 @@ def _cart_id(request):
 
 @method_decorator(csrf_exempt, name='dispatch')
 class add_cart(APIView):
-    print('ps 1')
     def post(self, request):  
-        print('ps 2')
         product_id = request.data.get('product_id')
         product = Product.objects.get(id=product_id)  
         try:
@@ -81,7 +79,6 @@ class cart(APIView):
         try:
             if request.user.is_authenticated:
                 cart_items = CartItem.objects.filter(user=request.user, is_active=True)
-                print("3")
             else:
                 cart = Cart.objects.get(Cart_id=_cart_id(request))
                 cart_items = CartItem.objects.filter(Cart=cart, is_active=True)

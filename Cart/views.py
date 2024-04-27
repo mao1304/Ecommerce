@@ -61,7 +61,9 @@ class remove_cart(APIView):
 class remove_cart_item(APIView):
     def post(self,request):
         product_id = request.data.get('product_id')
-        cart = Cart.objects.get(Cart_id = _cart_id(request))
+        cart = request.data.get('cart_id')
+        # cart = Cart.objects.get(Cart_id = _cart_id(request))
+        cart = Cart.objects.get(Cart_id =cart)
         product = get_object_or_404(Product, id=product_id)
         cart_item = CartItem.objects.get(Product=product, Cart=cart)
         cart_item.delete()
@@ -73,9 +75,9 @@ class cart(APIView):
     print("1")
 
     def get(self, request, total=0, quantity=0, cart_items=None):
-        print("2")
+
         cart_items = []
-        print(cart_items)
+
         try:
             if request.user.is_authenticated:
                 cart_items = CartItem.objects.filter(user=request.user, is_active=True)
@@ -96,6 +98,7 @@ class cart(APIView):
             'total': total,
             'quantity': quantity,
             'cart_item': cart_items_serialized,
+
         }
         return Response({'cart': context}, status=status.HTTP_200_OK)
 

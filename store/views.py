@@ -40,10 +40,10 @@ class product_detail(APIView):
     #     return Response({'message': 'hello word!'},status=status.HTTP_200_OK)
     # # print("1")
     # # def post(self, request):
-        product_slug = request.data.get('product_slug')
+        product_id = request.data.get('product_id')
 
         try: 
-            single_product = Product.objects.get( slug=product_slug)
+            single_product = Product.objects.get(id=product_id)
             in_cart = CartItem.objects.filter(Cart__Cart_id=_cart_id(request), Product=single_product).exists()
         except Product.DoesNotExist:
             return Response({'error': 'Producto no encontrado'}, status=status.HTTP_404_NOT_FOUND)

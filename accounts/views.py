@@ -39,15 +39,16 @@ def registrer(request):
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
 
 
-@method_decorator(login_required, name='dispatch')
+@method_decorator(csrf_exempt, name='dispatch')
 class profile(APIView):
     # permission_classes = [IsAuthenticated]
     def get(self,request):
         serializer = AccountSerializer(instance=request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+@method_decorator(csrf_exempt, name='dispatch')
 class Logout(APIView):
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated].
     def post(self, request):
         request.session.flush()
         logout(request)
@@ -84,3 +85,12 @@ class Login(APIView):
 
         return Response({'token': token.key, 'createtoken': created, 'user': AccountSerializer(user).data}, status=status.HTTP_200_OK)
 
+
+
+class change_password(APIView):
+    def post(self, request):
+        current_password = request.data.get('current_password')
+        new_password = request.data.get('new_password')
+        confirm_password = request.data.get('confirm_password')
+
+        user = Account.objects.get(email__exact=request.email)

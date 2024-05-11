@@ -5,15 +5,15 @@ from store.models import Product
 from accounts.models import Account
 
 class Cart(models.Model):
-    Cart_id = models.CharField(max_length=250, blank= True)
+    Cart_id = models.ForeignKey(Account, on_delete=models.CASCADE)
     date_added = models.DateTimeField(auto_now_add=True)
     
 
     def __str__(self):
-        return self.Cart_id
+        return self.Cart_id.email
 
 class CartItem(models.Model):
-    user = models.ForeignKey(Account, on_delete=models.CASCADE, null= True)
+    # user = models.ForeignKey(Account, on_delete=models.CASCADE, null= True)
     Product = models.ForeignKey(Product, on_delete=models.CASCADE)
     Cart = models.ForeignKey(Cart, on_delete=models.CASCADE, null=True)
     quantity = models.IntegerField()

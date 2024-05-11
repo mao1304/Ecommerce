@@ -11,7 +11,13 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
+import environ, os
+from dotenv import load_dotenv
 
+load_dotenv() # Carga las variables de entorno del archivo .env
+
+env = environ.Env()
+environ.Env.read_env()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -27,7 +33,8 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-
+# YOUR_PUBLIC_KEY=os.environ.get('TEST-3cd1b4c9-da4f-4769-b47e-8fe825b5e1d1')
+# YOUR_ACCESS_TOKEN=os.environ.get('TEST-8676408452406548-051018-0dc62680a8925bcb4db0b72c50eb9423-1805958327')
 # Application definition
 
 INSTALLED_APPS = [
@@ -39,11 +46,15 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework.authtoken',
+    # 'payments_mercadopago',
     'accounts',
     'category',
     'store',
     'Cart',
+    'orders',
+
 ]
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -108,7 +119,12 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+    ),
+}
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
@@ -123,7 +139,13 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
+
+
 CORS_ALLOW_ALL_ORIGINS = True
+
+
+
+
 import os
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR /'static/'

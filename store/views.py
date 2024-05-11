@@ -11,7 +11,7 @@ from rest_framework.response import Response
 from .serializer import ProductSerializer
 from .models import Product
 from category.views import readOnlyUserPermission
-from category.models import Category, SubCategory
+from category.models import Category
 from Cart.models import CartItem
 from Cart.views import _cart_id
 

@@ -8,7 +8,7 @@ class AccountSerializer(serializers.ModelSerializer):
         fields = ['first_name','last_name', 'email', 'password']
 
     # def create(self, validated_data):
-    #     username = validated_data['email'].split('@')[0]
+    #     username = validated_data['email'].split('@')[0]-
     #     user = Account.objects.create_user(username=username, **validated_data)
     #     return user
 

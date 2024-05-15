@@ -13,6 +13,9 @@ from rest_framework import status
 from Cart.models import Cart, CartItem
 from store.models import Product
 from rest_framework.permissions import IsAuthenticated
+from django.conf import settings
+import mercadopago
+import json
 
 def _cart_id(request):
     if request.user.is_authenticated:
@@ -134,3 +137,37 @@ class checkout(APIView):
         }
         return Response({'cart': context}, status=status.HTTP_200_OK)
 
+
+class ProcessPaymentAPIView(APIView):
+    def post(self, request):
+        try:
+            request_values = json.loads(request.body)
+            payment_data = {
+                "transaction_amount": float(request_values["transaction_amount"]),
+                "token": request_values["token"],
+                "installments": int(request_values["installments"]),
+                "payment_method_id": request_values["payment_method_id"],
+                "issuer_id": request_values["issuer_id"],
+                "payer": {
+                    "email": request_values["payer"]["email"],
+                    "identification": {
+                        "type": request_values["payer"]["identification"]["type"],
+                        "number": request_values["payer"]["identification"]["number"],
+                    },
+                },
+            }
+
+            sdk = mercadopago.SDK(str(settings.YOUR_ACCESS_TOKEN))
+
+            payment_response = sdk.payment().create(payment_data)
+
+            payment = payment_response["response"]
+            status = {
+                "id": payment["id"],
+                "status": payment["status"],
+                "status_detail": payment["status_detail"],
+            }
+
+            return Response(data={"body": status, "statusCode": payment_response["status"]}, status=201)
+        except Exception as e:
+            return Response(data={"body": payment_response}, status=400)

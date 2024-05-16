@@ -14,6 +14,8 @@ from Cart.models import Cart, CartItem
 from store.models import Product
 from rest_framework.permissions import IsAuthenticated
 from django.conf import settings
+from rest_framework.decorators import permission_classes, authentication_classes
+from rest_framework.authentication import TokenAuthentication
 import mercadopago
 import json
 
@@ -72,15 +74,15 @@ def _cart_id(request):
 #         cart_item.delete()
 
 #         return Response('item remove to cart susesfully', status=status.HTTP_200_OK)
-
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
 @method_decorator(csrf_exempt, name='dispatch')
 class add_cart(APIView):
-    permission_classes = [IsAuthenticated]
     def post(self, request, quantity=0):
         cart_products = request.data.get('cart', [])
-
-        cart, created = Cart.objects.get_or_create(Cart_id=request.user)
-
+        prod = []
+        cart, created = Cart.objects.get_or_create(Cart_id=request.user)  
+        print(f"la lista de los productos {cart_products} del carro {cart}")
 
         for products in cart_products:
             product_id = products.get('id')
@@ -108,10 +110,11 @@ class add_cart(APIView):
         return Response("products added", status=status.HTTP_200_OK)
     
 
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
 @method_decorator(csrf_exempt, name='dispatch')
 class checkout(APIView):
     print('entra')
-    permission_classes = [IsAuthenticated]
     def get(self, request, total=0, quantity=0, cart_items=None):
 
         cart_items = []
@@ -119,55 +122,29 @@ class checkout(APIView):
         try:
             cart, created = Cart.objects.get_or_create(Cart_id=request.user)
             cart_items = CartItem.objects.filter(Cart=cart, is_active=True)
-
             for cart_item in cart_items:
                 total += (cart_item.Product.price * cart_item.quantity)
                 quantity += cart_item.quantity
                 
         except ObjectDoesNotExist:
             pass
+        items = []
+        for cart_item in cart_items:
+            item = {
+                "id": cart_item.Product.id,
+                "Product_name": cart_item.Product.Product_name,
+                "images": cart_item.Product.images,
+                "quantity": cart_item.quantity,
+                "price": float(cart_item.Product.price),
+            }
+            items.append(item)
 
-        cart_items_serialized = [model_to_dict(item) for item in cart_items]
+        # cart_items_serialized = [model_to_dict(item) for item in items]
 
         context = {
             'total': total,
             'quantity': quantity,
-            'cart_item': cart_items_serialized,
+            'cart_item': items,
 
         }
         return Response({'cart': context}, status=status.HTTP_200_OK)
-
-
-class ProcessPaymentAPIView(APIView):
-    def post(self, request):
-        try:
-            request_values = json.loads(request.body)
-            payment_data = {
-                "transaction_amount": float(request_values["transaction_amount"]),
-                "token": request_values["token"],
-                "installments": int(request_values["installments"]),
-                "payment_method_id": request_values["payment_method_id"],
-                "issuer_id": request_values["issuer_id"],
-                "payer": {
-                    "email": request_values["payer"]["email"],
-                    "identification": {
-                        "type": request_values["payer"]["identification"]["type"],
-                        "number": request_values["payer"]["identification"]["number"],
-                    },
-                },
-            }
-
-            sdk = mercadopago.SDK(str(settings.YOUR_ACCESS_TOKEN))
-
-            payment_response = sdk.payment().create(payment_data)
-
-            payment = payment_response["response"]
-            status = {
-                "id": payment["id"],
-                "status": payment["status"],
-                "status_detail": payment["status_detail"],
-            }
-
-            return Response(data={"body": status, "statusCode": payment_response["status"]}, status=201)
-        except Exception as e:
-            return Response(data={"body": payment_response}, status=400)

@@ -41,7 +41,7 @@ def registrer(request):
 
 @method_decorator(csrf_exempt, name='dispatch')
 class profile(APIView):
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
     def get(self,request):
         serializer = AccountSerializer(instance=request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)

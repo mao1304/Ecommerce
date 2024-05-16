@@ -44,8 +44,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    
     'rest_framework',
     'rest_framework.authtoken',
+    
     # 'payments_mercadopago',
     'accounts',
     'category',
@@ -142,6 +144,7 @@ USE_TZ = True
 
 
 CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS= True
 
 
 

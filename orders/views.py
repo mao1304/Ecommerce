@@ -16,15 +16,18 @@ from rest_framework.permissions import IsAuthenticated
 from django.conf import settings
 import mercadopago
 import json
-
-
+from rest_framework.decorators import permission_classes, authentication_classes
+from rest_framework.authentication import TokenAuthentication
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+@method_decorator(csrf_exempt, name='dispatch')
 class ProcessPaymentAPIView(APIView):
     def post(self, request):
-        name = request.data.get('name')        
-        surname = request.data.get('surname')      
-        email = request.data.get('email')
-        phone = request.data.get('phone')
-        address = request.data.get('address')
+        # name = request.data.get('name')        
+        # surname = request.data.get('surname')      
+        # email = request.data.get('email')
+        # phone = request.data.get('phone')
+        # address = request.data.get('address')
         
         cart_items = []
         try:
@@ -49,22 +52,22 @@ class ProcessPaymentAPIView(APIView):
 
             preference_data = {
                 "items": items,
-                "payer": {
-                    "name": name,
-                    "surname": surname,
-                    "email": email,
-                    "phone": {
-                        "area_code": "57",
-                        "number": phone
-                    },
-                "identification": {
-                    "type": "CC",
-                    "number": "123456789"
-                },
-                "address": {
-                    "street_name": address
-                }
-            },
+            #     "payer": {
+            #         "name": name,
+            #         "surname": surname,
+            #         "email": email,
+            #         "phone": {
+            #             "area_code": "57",
+            #             "number": phone
+            #         },
+            #     "identification": {
+            #         "type": "CC",
+            #         "number": "123456789"
+            #     },
+            #     "address": {
+            #         "street_name": address
+            #     }
+            # },
             "back_urls": {
                 "success": "https://n3b52h4k-5173.use2.devtunnels.ms/Products",
                 "failure": "http://www.failure.com",
@@ -77,11 +80,14 @@ class ProcessPaymentAPIView(APIView):
             preference_response = sdk.preference().create(preference_data)
             preference = preference_response["response"]
 
+            sandbox_init_point = preference.get("sandbox_init_point")           
             init_point = preference.get("init_point")           
-            init_point = preference.get("init_point")
+            print("____________________")
+            print(preference)
+            print("____________________")
 
 
-            return Response(init_point, status=201)
+            return Response({"INIT":sandbox_init_point,"INIT_POINT":init_point}, status=201)
         except Exception as e:
             error_message = str(e)
             return Response(data={"error": error_message}, status=400)
